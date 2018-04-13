@@ -1,6 +1,6 @@
 from random import randint
 
-class twoohfoureight:    
+class Twoohfoureight:    
     def __init__(self):
         #Init the board and apply pieces:
         self.board = self.boardInit()
@@ -101,5 +101,5 @@ class twoohfoureight:
             self.board = [result[i] for i in reversed(range(4))]
 
 if __name__ == '__main__':
-    game = twoohfoureight()
+    game = Twoohfoureight()
     game.printBoard()
