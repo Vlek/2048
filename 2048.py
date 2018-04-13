@@ -1,105 +1,71 @@
-from random import randint
+#!/usr/bin/env python3
 
-class Twoohfoureight:    
+from random import choice, randint
+
+class Twoohfoureight:
     def __init__(self):
-        #Init the board and apply pieces:
-        self.board = self.boardInit()
-        self.addRandomPiece(2, True)
-        self.score = 0
+        self.map = [[0]*4 for i in range(4)]
+        self._add_random_piece(2)
 
-    def boardInit(self):
-        return [ [ ' ' for i in range(4) ] for i in range(4) ]
+    def print_map(self):
+        for i in self.map:
+            #print('\t'.join(map(str, i)))
+            print(i)
 
-    def addRandomPiece(self, n, twosOnly=False):
-        '''adds random piece n times'''
-        for addition in range(n):
-            #taking advantage of list referencing to add a piece.
-            rowPool = [i for i in self.board if ' ' in i]
-            inter = rowPool[randint(0, len(rowPool)-1)]
-            step = randint(0, inter.count(' ') - 1)
-            index = 0
-            while step > 0:
-                index = inter.index(' ', index)
-                step -= 1
-            if twosOnly:
-                inter[index] = 2
-            else:
-                inter[index] = (2 if randint(0, 3) <= 2 else 4)
+    def _add_random_piece(self, num_pieces=1):
+        for i in range(num_pieces):
+            available_slots = []
+            for row in range(4):
+                for column in range(4):
+                    if self.map[row][column] == 0:
+                        available_slots.append([row, column])
+            # TODO: Check len of available_slots for a spot.
+            # if one is not available, then game over.
+            chosen = choice(available_slots)
+            self.map[chosen[0]][chosen[1]] = (4 if randint(1, 10) == 1 else 2)
 
-    def printBoard(self):
-        for i in self.board:
-            print('|\t{}\t|\t{}\t|\t{}\t|\t{}\t|'.format(i[0],i[1],i[2],i[3]))
+    def _rotate(self, rotations=1):
+        for rotation in range(rotations):
+            result = [[] for i in range(4)]
+            for r in range(3, -1, -1):
+                for c in range(4):
+                    result[c].append(self.map[r][c])
+            self.map = result
+            
+    def move(self, direction=0):
+        """
+        This is my favorite part of making the game. I use this list of lists
+        in order to decide how many times I rotate the game board in order
+        to do a standard left-to-right move so that the algorithm is super simple
+        """
+        moves = [
+            [3, 1],
+            [2, 2],
+            [1, 3],
+            [0, 0]
+        ]
 
-    def move(self, direction):
-        '''modifies the board orientation, then takes care of the move based
-        on the 'right' movement, then orients the board back'''
-        if direction in ['up', 'down', 'left', 'right']:
+        self._rotate(moves[direction][0])
 
-            #Reorient the board so that there only needs to be one move function
-            directions = {'up':(3,1),'down':(1,3),'left':(2,2)}
-            if direction in ['up','down','left']:
-                self.boardOrientation(directions[direction][0])
-            result = []
-            oldBoard = list(self.board)
+        for row in range(4):
+            r = [i for i in self.map[row] if i != 0]
 
-            #Perform the move
-            for i in self.board:
-                
-                #If it's not blank, then proceed to move pieces
-                if i != [' ',' ',' ',' ']:
+            r_result = []
+            while(len(r)):
+                num = r.pop(0)
+                if len(r) and num == r[0]:
+                    num += r.pop(0)
+                    # TODO: Do a 2048 check here to see if the player won?
+                    # this might not be the best place because we could use
+                    # this method to run tests to see if the player has any valid moves
+                r_result.append(num)
                     
-                    intermediary = list(i)
+            self.map[row] = r_result + [0]*(4-len(r_result))
 
-                    #Remove blank spaces
-                    while intermediary.count(' ') > 0:
-                        intermediary.pop(intermediary.index(' '))
+        self._add_random_piece()
 
-                    #If there's more than one piece, see if they need to merge
-                    if len(intermediary) > 1:
-                        i = 1
-                        while i < len(intermediary):
-                            if intermediary[-i] == intermediary[-i - 1]:
-                                intermediary[-i] *= 2
-                                self.score += intermediary[-i]
-                                intermediary.pop(-i - 1)
-                            i += 1
-                    addBlanks = [' '] * (4 - len(intermediary))
-                    addBlanks.extend(intermediary)
-                    i =  addBlanks
+        self._rotate(moves[direction][1])
+        self.print_map()
 
-                #Regardless of what happens, make sure that the row appears in the board again
-                result.append(i)
-            self.board = result
-
-            #Check whether the board even changed, and add a piece if it did.
-            if result == oldBoard:
-                raise NameError("Unacceptable Move: Does not change board")
-            else:
-                self.addRandomPiece(1)
-
-            #Put the board back the way that it was
-            if direction in ['up','down','left']:
-                self.boardOrientation(directions[direction][1])
-
-        #Sorry, didn't understand the move
-        else:
-            raise NameError("Unacceptable Move: not a direction")
-        self.printBoard() #this is a placeholder
-
-    def boardOrientation(self, reorientTimes):
-        '''reorients the board so that the right movement is able to take care of all movement directions.
-        Should be used once to put the board so that the right action performs the move,
-        then put back to display the board as it should be'''
-        for i in range(reorientTimes):
-            result = []
-            microResult = []
-            for column in range(4):
-                for row in range(4):
-                    microResult.append(self.board[row][column])
-                result.append(microResult)
-                microResult = []
-            self.board = [result[i] for i in reversed(range(4))]
-
-if __name__ == '__main__':
-    game = Twoohfoureight()
-    game.printBoard()
+g = Twoohfoureight()
+g.print_map()
